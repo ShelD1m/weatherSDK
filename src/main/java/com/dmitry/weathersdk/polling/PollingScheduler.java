@@ -25,7 +25,7 @@ public class PollingScheduler implements Closeable {
 
     public static PollingScheduler noop() {
         return new PollingScheduler(() -> {}, Duration.ofDays(3650)) {
-            @Override public void close() { /* ничего */ }
+            @Override public void close() {}
         };
     }
 

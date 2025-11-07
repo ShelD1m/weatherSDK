@@ -39,15 +39,27 @@ public final class WeatherClient {
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            int sc = response.statusCode();
+            String body = response.body();
 
-            if (response.statusCode() != 200) {
-                throw new IOException("HTTP " + response.statusCode() + " — " + response.body());
+            if (sc == 200) {
+                return WeatherResponse.fromJson(body);
             }
 
-            return WeatherResponse.fromJson(response.body());
+            switch (sc) {
+                case 401 ->
+                        throw new com.dmitry.weathersdk.exception.AuthenticationException("Invalid/expired API key");
+                case 404 -> throw new com.dmitry.weathersdk.exception.CityNotFoundException(city);
+                case 429 -> throw new com.dmitry.weathersdk.exception.RateLimitException("Rate limit exceeded");
+                default -> throw new com.dmitry.weathersdk.exception.NetworkException("HTTP " + sc + " — " + body);
+            }
 
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Ошибка при получении погоды: " + e.getMessage(), e);
+        } catch (IOException e) {
+            throw new com.dmitry.weathersdk.exception.NetworkException("I/O error: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new com.dmitry.weathersdk.exception.NetworkException("Request interrupted", e);
         }
     }
+
 }

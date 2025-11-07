@@ -17,6 +17,9 @@ public class LruCache<K, V extends CacheEntry<?>> implements Cache<K, V> {
             }
         };
     }
+    public synchronized java.util.Set<K> keys() {
+        return new java.util.LinkedHashSet<>(map.keySet());
+    }
 
     @Override
     public synchronized V getIfFresh(K key) {
